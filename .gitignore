@@ -1,0 +1,44 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+
+# Build artifacts
+build/
+dist/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# IDE settings
+.idea/
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Downloaded datasets and generated data
+data/raw/
+data/clean/
+data/processed/
+*.parquet
+*.jsonl
+*.csv
+
+# Logs
+*.log
+
+# Local benchmark output
+results/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
