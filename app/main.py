@@ -43,7 +43,7 @@ async def search_products(query: str):
     Raises:
         HTTPException: If the search query is missing or blank.
     """
-    print(123)
+
     if not query or not query.strip():
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
