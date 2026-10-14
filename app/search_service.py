@@ -9,11 +9,16 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# DB related env variables
 db_user = os.getenv("DB_USER")
 db_pass = os.getenv("DB_PASS")
 db_host = os.getenv("DB_HOST")
 db_name = os.getenv("DB_NAME")
 DATABASE_URL = f"postgresql://{db_user}:{db_pass}@{db_host}:5432/{db_name}"
+
+# Ollama related variables
+ollama_host = os.getenv("OLLAMA_HOST")
+ollama_embedding_model = os.getenv("OLLAMA_MODEL")
 
 
 # --- Helper Functions ---
@@ -39,13 +44,13 @@ def generate_embedding(query_text: str) -> list[float] | None:
     Calls the local Ollama API to generate a vector embedding for the given text.
     This function replicates the logic from scripts/vectorise_summary.py.
     """
-    if not os.getenv("OLLAMA_HOST") or not os.getenv("OLLAMA_MODEL"):
+    if not ollama_host or not ollama_embedding_model:
         print("Error: OLLAMA_HOST or OLLAMA_MODEL environment variables are not set.")
         return None
 
-    api_url = f"{os.getenv('OLLAMA_HOST')}/api/embeddings"
+    api_url = f"{ollama_host}/api/embeddings"
     payload = {
-        "model": os.getenv("OLLAMA_MODEL"),
+        "model": ollama_embedding_model,
         "prompt": query_text,
         "options": {"preferred_model_output_format": "json"},
     }
@@ -63,7 +68,7 @@ def generate_embedding(query_text: str) -> list[float] | None:
             return None
 
     except requests.exceptions.ConnectionError:
-        print(f"Error: Could not connect to Ollama at {os.getenv('OLLAMA_HOST')}.")
+        print(f"Error: Could not connect to Ollama at {ollama_host}.")
         return None
     except requests.exceptions.Timeout:
         print("Error: Ollama API request timed out.")
@@ -88,7 +93,7 @@ def fuzzy_search(query: str, limit: int = 5) -> list[dict[str, Any]]:
     try:
         conn = get_db_connection()
         with conn.cursor() as cur:
-            sql = f"""
+            sql = """
             SELECT
                 id,
                 title,
@@ -97,10 +102,10 @@ def fuzzy_search(query: str, limit: int = 5) -> list[dict[str, Any]]:
             FROM products
             WHERE title %% %s
             ORDER BY similarity DESC
-            LIMIT {limit};
+            LIMIT %s;
             """
             # Pass the term twice: once for the similarity function and once for the % operator.
-            cur.execute(sql, (query, query))
+            cur.execute(sql, (query, query, limit))
 
             for row in cur.fetchall():
                 product_id, title, summary, similarity = row
@@ -134,7 +139,7 @@ def fts_search(query: str, limit: int = 5) -> list[dict[str, Any]]:
     try:
         conn = get_db_connection()
         with conn.cursor() as cur:
-            sql = f"""
+            sql = """
             SELECT
                 id,
                 title,
@@ -143,9 +148,9 @@ def fts_search(query: str, limit: int = 5) -> list[dict[str, Any]]:
             FROM products
             WHERE search_vector @@ websearch_to_tsquery('english', %s)
             ORDER BY rank DESC
-            LIMIT {limit};
+            LIMIT %s;
             """
-            cur.execute(sql, (query, query))
+            cur.execute(sql, (query, query, limit))
 
             for row in cur.fetchall():
                 product_id, title, summary, rank = row
