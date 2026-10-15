@@ -74,10 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {string} query - The original query.
    */
   function renderSearchResults(searchResults, query) {
-    const { fuzzy, fts, vector } = searchResults.results;
-    const fuzzyCount = fuzzy.length;
-    const ftsCount = fts.length;
-    const vectorCount = vector.length;
+    const { fuzzy, fts, vector, hybrid } = searchResults.results;
+    const fuzzyCount = fuzzy?.length || 0;
+    const ftsCount = fts?.length || 0;
+    const vectorCount = vector?.length || 0;
+    const hybridCount = hybrid?.length || 0;
 
     // Process results for each panel and build the entire panel HTML string
     const buildPanelHtml = (panelName, results) => {
@@ -86,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsListHtml =
           '<p class="result-card" style="text-align: center; padding: 20px; color: #666;">No products found matching this query.</p>';
       } else {
-        results.forEach((result, index) => {
+        results.forEach((result) => {
           // Determine score detail HTML based on the search method
           let scoreDetailHtml = '';
           let scoreValue = null;
@@ -100,6 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
           } else if (panelName === 'vector' && typeof result.distance === 'number') {
             scoreValue = result.distance;
             scoreDetailHtml = `Vector Distance: ${scoreValue.toFixed(4)}`;
+          } else if (panelName === 'hybrid' && typeof result.hybrid_score === 'number') {
+            scoreValue = result.hybrid_score;
+            scoreDetailHtml = `RRF Score: ${scoreValue.toFixed(4)}`;
           } else {
             scoreDetailHtml = 'Metric N/A';
           }
@@ -111,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="score-detail">${scoreDetailHtml}</div>
                             <div class="results-meta">
                                 <span class="result-id">ID: ${result.id}</span>
-                                <span class="result-rank">${results.length} results found</span>
                             </div>
                         </div>
                     `;
@@ -122,13 +125,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
                 <div class="result-panel ${panelName}">
                     <div class="panel-header">
-                        <h2>${panelName === 'fuzzy' ? 'pg_trgm' : panelName === 'fts' ? 'PostgreSQL FTS' : 'pgvector'}</h2>
+                        <h2>${panelName === 'fuzzy' ? 'pg_trgm' : panelName === 'fts' ? 'PostgreSQL FTS' : panelName === 'vector' ? 'pgvector' : 'Hybrid Search'}</h2>
                         <div class="score-display">${panelName.toUpperCase()}</div>
-                    </div
-                    <div class="results-list">${resultsListHtml}</div
+                    </div>
+                    <div class="results-list">${resultsListHtml}</div>
                     <div class="results-meta" style="border-top: none;">
                         <span class="total-count">${results.length} Results</span>
-                    </div
+                    </div>
                 </div>
             `;
     };
@@ -136,15 +139,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const fuzzyHtml = buildPanelHtml('fuzzy', fuzzy);
     const ftsHtml = buildPanelHtml('fts', fts);
     const vectorHtml = buildPanelHtml('vector', vector);
+    const hybridHtml = buildPanelHtml('hybrid', hybrid);
 
     // Assemble the final grid HTML
     resultsContainer.innerHTML = `
             <div class="result-panel fuzzy">${fuzzyHtml}</div>
             <div class="result-panel fts">${ftsHtml}</div>
             <div class="result-panel vector">${vectorHtml}</div>
+            ${hybrid ? `<div class="result-panel hybrid">${hybridHtml}</div>` : ''}
         `;
 
-    resultsStatusBar.innerHTML = `<p>Successfully searched for "${query}". Results rendered in ${fuzzyCount + ftsCount + vectorCount} total items.</p>`;
+    const totalCount = fuzzyCount + ftsCount + vectorCount + hybridCount;
+    resultsStatusBar.innerHTML = `<p>Successfully searched for "${query}". Results rendered in ${totalCount} total items.</p>`;
   }
 
   /**
