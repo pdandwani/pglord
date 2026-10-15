@@ -3,3 +3,4 @@ uvicorn[standard]
 psycopg[binary]==3.3.6
 requests==2.34.2
 python-dotenv==1.2.4
+jinja2

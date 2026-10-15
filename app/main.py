@@ -1,15 +1,33 @@
 import asyncio
+from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Query, Request, status
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from .search_service import fts_search, fuzzy_search, vector_search
 
+# --- Setup ---
 # Initialize the FastAPI application
 app = FastAPI(
     title="PGLord API",
     description="A minimal API service built to interface with existing data processing pipelines.",
     version="0.1.0",
 )
+
+BASE_DIR = Path(__file__).resolve().parent
+
+# Mount static files (CSS and JS)
+# Assumes the structure app/static/ is correct
+app.mount(
+    "/static",
+    StaticFiles(directory=BASE_DIR / "static"),
+    name="static",
+)
+
+# Initialize Jinja2 templates
+# Assumes the template directory app/templates/ is correct
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
 @app.get("/health", tags=["System"])
@@ -21,16 +39,17 @@ def health_check():
     return {"status": "ok", "service": "FastAPI", "version": "0.1.0"}
 
 
-@app.get("/", tags=["System"])
-def read_root():
-    """
-    Root endpoint of the service.
-    """
-    return {"message": "Welcome to the PGLord backend API."}
+@app.get("/", tags=["UI"])
+async def read_root(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html", context={})
 
 
 @app.get("/search", tags=["Search"])
-async def search_products(query: str):
+async def search_products(
+    query: str = Query(
+        ..., description="The search term used for all three search methods."
+    )
+):
     """
     Executes parallel fuzzy, full-text, and vector searches on products.
 
