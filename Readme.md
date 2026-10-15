@@ -11,11 +11,11 @@ Early development.
 - [x] Import product data from Hugging Face
 - [x] Store product records in PostgreSQL
 - [x] Generate local text embeddings
-- [ ] Implement trigram similarity using `pg_trgm`
-- [ ] Implement PostgreSQL full-text search (FTS)
-- [ ] Implement semantic search using `pgvector`
+- [x] Implement trigram similarity using `pg_trgm`
+- [x] Implement PostgreSQL full-text search (FTS)
+- [x] Implement semantic search using `pgvector`
 - [ ] Implement hybrid search
-- [ ] Build a UI to compare the top 5 results from each search method
+- [x] Build a UI to compare the top 5 results from each search method
 - [ ] Benchmark relevance and performance
 - [ ] Dockerize the application
 
