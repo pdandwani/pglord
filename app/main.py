@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Query, Request, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from .search_service import fts_search, fuzzy_search, vector_search
+from .search_service import fts_search, fuzzy_search, hybrid_search, vector_search
 
 # --- Setup ---
 # Initialize the FastAPI application
@@ -71,14 +71,13 @@ async def search_products(
 
     print(f"Received search query: {query}. Initiating concurrent search.")
 
-    # Run the searches concurrently in separate threads to prevent blocking the event loop
-    # as the underlying search functions use blocking psycopg calls.
     fuzzy_task = asyncio.to_thread(fuzzy_search, query)
     fts_task = asyncio.to_thread(fts_search, query)
     vector_task = asyncio.to_thread(vector_search, query)
+    hybrid_task = asyncio.to_thread(hybrid_search, query)
 
-    fuzzy_results, fts_results, vector_results = await asyncio.gather(
-        fuzzy_task, fts_task, vector_task
+    fuzzy_results, fts_results, vector_results, hybrid_results = await asyncio.gather(
+        fuzzy_task, fts_task, vector_task, hybrid_task
     )
 
     # Consolidate results into the required structure
@@ -88,5 +87,6 @@ async def search_products(
             "fuzzy": fuzzy_results,
             "fts": fts_results,
             "vector": vector_results,
+            "hybrid": hybrid_results,
         },
     }
