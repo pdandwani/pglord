@@ -219,3 +219,139 @@ def vector_search(query: str, limit: int = 5) -> list[dict[str, Any]]:
     finally:
         if conn:
             conn.close()
+
+
+def hybrid_search(query: str, limit: int = 5) -> list[dict[str, Any]]:
+    """
+    Performs a hybrid search combining Full-Text Search (FTS) and Vector Search
+    results using Reciprocal Rank Fusion (RRF).
+
+    This function first generates a vector embedding for the query and then executes
+    a complex SQL query that ranks results based on both ts_rank and vector distance,
+    which are subsequently fused into a single hybrid_score.
+    """
+    # 1. Generate embedding for the query
+    query_embedding = generate_embedding(query)
+    if query_embedding is None:
+        print("Hybrid Search failed: Could not generate embedding.")
+        return []
+
+    # Convert the list of floats into a string representation suitable for the SQL injection
+    vector_str = "[" + ",".join(str(value) for value in query_embedding) + "]"
+
+    conn = None
+    results = []
+
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            # The SQL query now uses parameters for both the text query and the vector.
+            # NOTE: We pass the vector as a string literal in the execute c
+            # for simplicity, as dynamic SQL is complex, but this relies on
+            # the database recognizing the format '[v1,v2,v3]'::vector.
+            sql = """
+            -- Hybrid search
+            -- Input query (re-defined in CTEs based on query string)
+            with input_query as (
+                select
+                    websearch_to_tsquery('english', %s) as tsquery,
+                    %s::vector AS query_embedding -- Using the generated vector
+            ),
+            -- FTS ranking
+            fts_candidates as (
+                select
+                    id,
+                    title,
+                    summary,
+                    row_number() over (
+                        order by
+                            ts_rank(
+                                search_vector,
+                                iq.tsquery
+                            ) desc
+                    ) as rank
+                from products
+                cross join input_query iq
+                where
+                    search_vector @@ iq.tsquery
+                order by
+                    ts_rank(
+                        search_vector,
+                        iq.tsquery
+                    ) desc
+                limit 10
+            ),
+            -- Vector ranking
+            vector_candidates as (
+                select
+                    id,
+                    title,
+                    summary,
+                    row_number() over (
+                        order by
+                            description_embedding <=> iq.query_embedding asc
+                    ) as rank
+                from products
+                cross join input_query iq
+                order by
+                    description_embedding <=> iq.query_embedding asc nulls last
+                limit 10
+            ),
+            -- Calculate RRF
+            combined_results as (
+                select
+                    id,
+                    title,
+                    summary,
+                    1.0 / (60 + rank) as rrf_score
+                from fts_candidates
+                union all
+                select
+                    id,
+                    title,
+                    summary,
+                    1.0 / (60 + rank) as rrf_score
+                from vector_candidates
+            ),
+            hybrid_results as (
+                select
+                    id,
+                    title,
+                    summary,
+                    sum(rrf_score) as rrf_score
+                from combined_results
+                group by
+                    id,
+                    title,
+                    summary
+            )
+            select
+                *
+            from hybrid_results
+            order by
+                rrf_score desc nulls last
+            limit %s;
+            """
+            # The query requires a tuple of parameters: (query, limit)
+            cur.execute(sql, (query, vector_str, limit))
+
+            for row in cur.fetchall():
+                # The row returns (id, title, summary, rrf_score)
+                product_id, title, summary, rrf_score = row
+                results.append(
+                    {
+                        "id": product_id,
+                        "title": title,
+                        "summary": summary,
+                        "hybrid_score": rrf_score,
+                    }
+                )
+
+            return results
+
+    except psycopg.OperationalError as e:
+        print(f"Hybrid Search DB Error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
