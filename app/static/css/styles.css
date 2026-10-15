@@ -1,0 +1,279 @@
+:root {
+    --color-bg: #f9f9f9;
+    --color-text: #333;
+    --color-card-bg: #ffffff;
+    --color-border: #e0e0e0;
+    --color-accent-fuzzy: #ff9800; /* Orange/Amber */
+    --color-accent-fts: #2196f3; /* Blue */
+    --color-accent-vector: #4caf50; /* Green */
+    --color-hover-bg: #f0f0f0;
+    --color-shadow: rgba(0, 0, 0, 0.05);
+}
+
+/* Light mode base */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s;
+}
+
+/* Utility Classes */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+.hidden {
+    display: none !important;
+}
+.error-text {
+    color: #d32f2f;
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px solid #d32f2f;
+    background-color: #fbe9e7;
+    border-radius: 4px;
+}
+
+/* Header Styling */
+header {
+    background-color: var(--color-card-bg);
+    border-bottom: 1px solid var(--color-border);
+    padding: 20px 0;
+    box-shadow: 0 2px 4px var(--color-shadow);
+    text-align: center;
+}
+header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    color: var(--color-text);
+}
+header .subtitle {
+    margin: 5px 0 15px 0;
+    font-size: 1rem;
+    color: #666;
+    font-weight: 400;
+}
+.method-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+.indicator-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: white;
+    transition: background-color 0.2s;
+}
+.indicator-badge:nth-child(1) { background-color: var(--color-accent-fuzzy); }
+.indicator-badge:nth-child(2) { background-color: var(--color-accent-fts); }
+.indicator-badge:nth-child(3) { background-color: var(--color-accent-vector); }
+
+
+/* Search Controls */
+#search-controls {
+    padding: 40px 0 30px 0;
+    text-align: center;
+}
+.input-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+#search-input {
+    padding: 12px 15px;
+    font-size: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    flex-grow: 1;
+    max-width: 600px;
+    transition: border-color 0.2s;
+}
+#search-input:focus {
+    border-color: var(--color-accent-fuzzy);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.1s;
+    white-space: nowrap;
+}
+
+#search-button {
+    background-color: var(--color-accent-fuzzy);
+    color: white;
+}
+#search-button:hover:enabled {
+    background-color: #e68a00;
+}
+
+#reset-button {
+    background-color: #ccc;
+    color: #444;
+}
+#reset-button:hover:enabled {
+    background-color: #b3b3b3;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#loading-indicator {
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    font-style: italic;
+    color: #888;
+}
+.loading-hidden {
+    display: none;
+}
+
+/* Results Grid & Panels */
+#results-container {
+    padding-top: 30px;
+}
+#results-status-bar {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+    color: #444;
+    padding: 10px;
+    border-bottom: 2px dashed var(--color-border);
+}
+
+#search-results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Mobile-first, wraps to 2 columns on tablet */
+    gap: 25px;
+    padding-bottom: 50px;
+}
+
+/* Result Card Styling */
+.result-panel {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--color-shadow);
+    transition: transform 0.3s, box-shadow 0.3s;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+}
+
+.result-panel:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 10px;
+}
+.panel-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Search Method specific accents */
+.score-display {
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+.fuzzy .score-display { background-color: rgba(255, 152, 0, 0.1); color: var(--color-accent-fuzzy); }
+.fts .score-display { background-color: rgba(33, 150, 243, 0.1); color: var(--color-accent-fts); }
+.vector .score-display { background-color: rgba(76, 175, 80, 0.1); color: var(--color-accent-vector); }
+
+
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex-grow: 1;
+    margin-bottom: 15px;
+}
+
+.result-card {
+    background-color: #fafafa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    box-shadow: 0 1px 3px var(--color-shadow);
+    transition: background-color 0.2s;
+}
+.result-card:hover {
+    background-color: #f5f5f5;
+}
+
+.result-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+    line-height: 1.2;
+}
+.result-card-summary {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 10px;
+}
+.score-detail {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #444;
+}
+
+.results-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #888;
+    padding-top: 10px;
+    border-top: 1px dashed var(--color-border);
+}
+
+/* Mobile View: Single Column */
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 2rem;
+    }
+    .result-panel {
+        padding: 20px;
+    }
+}
+
+/* Tablet View: Two Columns (max 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+    #search-results-grid {
+        grid-template-columns: repeat(auto-fit, minmax(45%, 1fr));
+    }
+}
+
+/* Desktop View: Three or more columns (over 1024px) */
+@media (min-width: 1025px) {
+    #search-results-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

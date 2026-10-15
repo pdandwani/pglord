@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pglord - PostgreSQL Search Playground</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>pglord</h1>
+        <p class="subtitle">The Lord of the Queries — PostgreSQL Search Playground</p>
+        <div class="method-indicator">
+          Methods: <span class="indicator-badge">Fuzzy (pg_trgm)</span>
+          <span class="indicator-badge">FTS</span>
+          <span class="indicator-badge">Vector (pgvector)</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- Search Section -->
+      <section id="search-controls">
+        <div class="input-group">
+          <input type="text" id="search-input" placeholder='Try "brass door knob"...' />
+          <button id="search-button">Search</button>
+          <button id="reset-button" class="secondary-button" disabled>Reset</button>
+        </div>
+        <div id="loading-indicator" class="loading-hidden">
+          <div class="spinner"></div>
+          <p>Searching... Please wait for results.</p>
+        </div>
+        <p id="error-message" class="hidden error-text"></p>
+      </section>
+
+      <!-- Results Section -->
+      <section id="results-container">
+        <div id="results-status-bar">
+          <p>Enter a query to begin searching.</p>
+        </div>
+
+        <div id="search-results-grid">
+          <!-- Result Panels will be injected here -->
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/js/search.js"></script>
+  </body>
+</html>
