@@ -6,6 +6,7 @@
     --color-accent-fuzzy: #ff9800; /* Orange/Amber */
     --color-accent-fts: #2196f3; /* Blue */
     --color-accent-vector: #4caf50; /* Green */
+    --color-accent-hybrid: #9c27b8; /* Purple */
     --color-hover-bg: #f0f0f0;
     --color-shadow: rgba(0, 0, 0, 0.05);
 }
@@ -74,7 +75,7 @@ header .subtitle {
 .indicator-badge:nth-child(1) { background-color: var(--color-accent-fuzzy); }
 .indicator-badge:nth-child(2) { background-color: var(--color-accent-fts); }
 .indicator-badge:nth-child(3) { background-color: var(--color-accent-vector); }
-
+.indicator-badge:nth-child(4) { background-color: var(--color-accent-hybrid); }
 
 /* Search Controls */
 #search-controls {
@@ -206,7 +207,7 @@ button:disabled {
 .fuzzy .score-display { background-color: rgba(255, 152, 0, 0.1); color: var(--color-accent-fuzzy); }
 .fts .score-display { background-color: rgba(33, 150, 243, 0.1); color: var(--color-accent-fts); }
 .vector .score-display { background-color: rgba(76, 175, 80, 0.1); color: var(--color-accent-vector); }
-
+.hybrid .score-display { background-color: rgba(156, 39, 184, 0.1); color: var(--color-accent-hybrid); }
 
 .results-list {
     display: flex;
