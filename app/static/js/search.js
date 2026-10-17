@@ -88,10 +88,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = methodConfig[method];
     const record = document.createElement('div');
     record.className = 'result-record';
+    const resultParent = document.createElement('div');
+    resultParent.className = 'result-parent';
 
     record.appendChild(createTextElement('span', 'result-id', `ID: ${result.id ?? '—'}`));
-    record.appendChild(createTextElement('div', 'result-title', result.title ?? 'Untitled'));
-    record.appendChild(createTextElement('div', 'result-summary', result.summary ?? 'No summary available'));
+
+    resultParent.appendChild(createTextElement('div', 'result-title', result.title ?? 'Untitled'));
+    resultParent.appendChild(createTextElement('div', 'result-summary', result.summary ?? 'No summary available'));
+    
+    record.appendChild(resultParent);
 
     const scoreLabel =
       method === 'vector' ? `${config.label}: ${formatScore(result, config)} (lower is better)` : `${config.label}: ${formatScore(result, config)}`;
