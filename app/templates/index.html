@@ -11,8 +11,7 @@
       <div class="container">
         <h1>pglord</h1>
         <p class="subtitle">The Lord of the Queries — PostgreSQL Search Playground</p>
-        <div class="method-indicator">
-          Methods: 
+        <div class="method-indicator" aria-label="Search methods">
           <span class="indicator-badge fuzzy">Fuzzy (pg_trgm)</span>
           <span class="indicator-badge fts">FTS</span>
           <span class="indicator-badge vector">Vector (pgvector)</span>
@@ -22,28 +21,39 @@
     </header>
 
     <main class="container">
-      <!-- Search Section -->
-      <section id="search-controls">
+      <section id="search-controls" aria-label="Search controls">
         <div class="input-group">
-          <input type="text" id="search-input" placeholder='Try "brass door knob"...' />
-          <button id="search-button">Search</button>
-          <button id="reset-button" class="secondary-button" disabled>Reset</button>
+          <input type="text" id="search-input" placeholder='Try "brass door knob"...' aria-label="Search products" />
+          <button id="search-button" type="button">Search</button>
+          <button id="reset-button" class="secondary-button" type="button" disabled>Reset</button>
         </div>
-        <div id="loading-indicator" class="loading-hidden">
-          <div class="spinner"></div>
+        <div id="loading-indicator" class="loading-hidden" role="status" aria-live="polite">
+          <div class="spinner" aria-hidden="true"></div>
           <p>Searching... Please wait for results.</p>
         </div>
-        <p id="error-message" class="hidden error-text"></p>
+        <p id="error-message" class="hidden error-text" role="alert"></p>
       </section>
 
-      <!-- Results Section -->
-      <section id="results-container">
-        <div id="results-status-bar">
+      <section id="results-container" aria-label="Search results">
+        <div id="results-status-bar" aria-live="polite">
           <p>Enter a query to begin searching.</p>
         </div>
 
-        <div id="search-results-grid">
-          <!-- Result Panels will be injected here -->
+        <div id="search-results-table" class="hidden">
+          <table>
+            <thead>
+              <tr>
+                <th class="rank-column" scope="col">Rank</th>
+                <th class="method-header fuzzy-header" scope="col">Fuzzy Search</th>
+                <th class="method-header fts-header" scope="col">FTS</th>
+                <th class="method-header vector-header" scope="col">Vector Search</th>
+                <th class="method-header hybrid-header" scope="col">Hybrid Search</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Results are rendered here by search.js -->
+            </tbody>
+          </table>
         </div>
       </section>
     </main>
