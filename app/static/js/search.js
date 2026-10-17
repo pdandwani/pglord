@@ -1,230 +1,181 @@
-/**
- * @fileoverview Frontend search interaction logic for pglord.
- *
- * This script handles user input, makes concurrent API requests to the FastAPI backend,
- * displays loading states, handles errors, and dynamically renders the search results
- * using vanilla DOM APIs, ensuring responsive behavior and data safety.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('search-input');
   const searchButton = document.getElementById('search-button');
   const resetButton = document.getElementById('reset-button');
-  const resultsContainer = document.getElementById('search-results-grid');
   const loadingIndicator = document.getElementById('loading-indicator');
   const errorMessage = document.getElementById('error-message');
   const resultsStatusBar = document.getElementById('results-status-bar');
+  const resultsTable = document.getElementById('search-results-table');
+  const tbody = resultsTable.querySelector('tbody');
 
   let isSearching = false;
-  let currentQuery = '';
 
-  /**
-   * Resets the UI state to its initial state.
-   */
-  function resetUI() {
-    searchInput.value = '';
-    resultsContainer.innerHTML = '';
-    resultsStatusBar.innerHTML = '<p>Enter a query to begin searching.</p>';
-    loadingIndicator.classList.add('loading-hidden');
-    errorMessage.classList.add('hidden');
-    searchButton.disabled = false;
-    resetButton.disabled = true;
-    resultsStatusBar.style.borderBottom = '2px dashed var(--color-border)';
-    resultsStatusBar.innerHTML = '<p>Enter a query to begin searching.</p>';
-    currentQuery = '';
+  const methodConfig = {
+    fuzzy: { label: 'Similarity', field: 'similarity', cellClass: 'fuzzy-cell', digits: 2 },
+    fts: { label: 'FTS rank', field: 'rank', cellClass: 'fts-cell', digits: 4 },
+    vector: { label: 'Distance', field: 'distance', cellClass: 'vector-cell', digits: 4 },
+    hybrid: { label: 'Hybrid score', field: 'hybrid_score', cellClass: 'hybrid-cell', digits: 4 }
+  };
+
+  function setStatus(message) {
+    resultsStatusBar.replaceChildren();
+    const paragraph = document.createElement('p');
+    paragraph.textContent = message;
+    resultsStatusBar.appendChild(paragraph);
   }
 
-  /**
-   * Displays a custom error message to the user.
-   * @param {string} message - The message to display.
-   */
+  function resetUI() {
+    searchInput.value = '';
+    tbody.replaceChildren();
+    resultsStatusBar.style.borderBottom = '1px dashed var(--color-border)';
+    setStatus('Enter a query to begin searching.');
+    loadingIndicator.classList.add('loading-hidden');
+    errorMessage.classList.add('hidden');
+    errorMessage.textContent = '';
+    searchButton.disabled = false;
+    resetButton.disabled = true;
+    resultsTable.classList.add('hidden');
+    isSearching = false;
+    searchInput.focus();
+  }
+
   function displayError(message) {
     errorMessage.textContent = message;
     errorMessage.classList.remove('hidden');
     loadingIndicator.classList.add('loading-hidden');
+    resultsTable.classList.add('hidden');
+    setStatus('Search failed. Please try again.');
     searchButton.disabled = false;
-    resultsStatusBar.innerHTML = `<p class="error-text" style="display:block;">Error: ${message}</p>`;
+    resetButton.disabled = searchInput.value.trim().length === 0;
   }
 
-  /**
-   * Updates the UI for the search state (loading/disabled).
-   * @param {boolean} loading - True if a search is in progress.
-   * @param {string} query - The query being searched.
-   */
   function updateLoadingState(loading, query) {
     isSearching = loading;
-    if (isSearching) {
-      searchButton.disabled = true;
-      resetButton.disabled = true;
-      loadingIndicator.classList.remove('loading-hidden');
+    searchButton.disabled = loading;
+    resetButton.disabled = loading || query.length === 0;
+    loadingIndicator.classList.toggle('loading-hidden', !loading);
+    if (loading) {
       errorMessage.classList.add('hidden');
-      // resultsStatusBar.textContent = `Searching for "${query}"...`;
-    } else {
-      searchButton.disabled = false;
-      loadingIndicator.classList.add('loading-hidden');
-      if (query.length > 0) {
-        resetButton.disabled = false;
-      }
+      errorMessage.textContent = '';
+      setStatus(`Searching for "${query}"...`);
     }
   }
 
-  /**
-   * Renders the entire set of results into the respective panels.
-   * @param {object} searchResults - The response data from the /search endpoint.
-   * @param {string} query - The original query.
-   */
-  function renderSearchResults(searchResults, query) {
-    const { fuzzy, fts, vector, hybrid } = searchResults.results;
-    const fuzzyCount = fuzzy?.length || 0;
-    const ftsCount = fts?.length || 0;
-    const vectorCount = vector?.length || 0;
-    const hybridCount = hybrid?.length || 0;
-
-    // Process results for each panel and build the entire panel HTML string
-    const buildPanelHtml = (panelName, results) => {
-      let resultsListHtml = '';
-      if (results.length === 0) {
-        resultsListHtml =
-          '<p class="result-card" style="text-align: center; padding: 20px; color: #666;">No products found matching this query.</p>';
-      } else {
-        results.forEach((result) => {
-          // Determine score detail HTML based on the search method
-          let scoreDetailHtml = '';
-          let scoreValue = null;
-
-          if (panelName === 'fuzzy' && typeof result.similarity === 'number') {
-            scoreValue = result.similarity;
-            scoreDetailHtml = `Fuzzy Similarity: ${(scoreValue * 100).toFixed(2)}%`;
-          } else if (panelName === 'fts' && typeof result.rank === 'number') {
-            scoreValue = result.rank;
-            scoreDetailHtml = `FTS Rank: ${scoreValue.toFixed(4)}`;
-          } else if (panelName === 'vector' && typeof result.distance === 'number') {
-            scoreValue = result.distance;
-            scoreDetailHtml = `Vector Distance: ${scoreValue.toFixed(4)}`;
-          } else if (panelName === 'hybrid' && typeof result.hybrid_score === 'number') {
-            scoreValue = result.hybrid_score;
-            scoreDetailHtml = `RRF Score: ${scoreValue.toFixed(4)}`;
-          } else {
-            scoreDetailHtml = 'Metric N/A';
-          }
-
-          const resultCardHtml = `
-                        <div class="result-card">
-                            <div class="result-card-title">${result.title}</div>
-                            <div class="result-card-summary">${result.summary}</div>
-                            <div class="score-detail">${scoreDetailHtml}</div>
-                            <div class="results-meta">
-                                <span class="result-id">ID: ${result.id}</span>
-                            </div>
-                        </div>
-                    `;
-          resultsListHtml += resultCardHtml;
-        });
-      }
-
-      return `
-                <div class="result-panel ${panelName}">
-                    <div class="panel-header">
-                        <h2>${panelName === 'fuzzy' ? 'pg_trgm' : panelName === 'fts' ? 'PostgreSQL FTS' : panelName === 'vector' ? 'pgvector' : 'Hybrid Search'}</h2>
-                        <div class="score-display">${panelName.toUpperCase()}</div>
-                    </div>
-                    <div class="results-list">${resultsListHtml}</div>
-                    <div class="results-meta" style="border-top: none;">
-                        <span class="total-count">${results.length} Results</span>
-                    </div>
-                </div>
-            `;
-    };
-
-    const fuzzyHtml = buildPanelHtml('fuzzy', fuzzy);
-    const ftsHtml = buildPanelHtml('fts', fts);
-    const vectorHtml = buildPanelHtml('vector', vector);
-    const hybridHtml = buildPanelHtml('hybrid', hybrid);
-
-    // Assemble the final grid HTML
-    resultsContainer.innerHTML = `
-            <div class="result-panel fuzzy">${fuzzyHtml}</div>
-            <div class="result-panel fts">${ftsHtml}</div>
-            <div class="result-panel vector">${vectorHtml}</div>
-            ${hybrid ? `<div class="result-panel hybrid">${hybridHtml}</div>` : ''}
-        `;
-
-    const totalCount = fuzzyCount + ftsCount + vectorCount + hybridCount;
-    resultsStatusBar.innerHTML = `<p>Successfully searched for "${query}". Results rendered in ${totalCount} total items.</p>`;
+  function formatScore(result, config) {
+    const value = result[config.field];
+    if (typeof value !== 'number' || !Number.isFinite(value)) return 'N/A';
+    return value.toFixed(config.digits);
   }
 
-  /**
-   * Primary search submission handler.
-   * @param {Event} event - The DOM event.
-   */
+  function createTextElement(tagName, className, text) {
+    const element = document.createElement(tagName);
+    element.className = className;
+    element.textContent = text == null || text === '' ? '—' : String(text);
+    return element;
+  }
+
+  function createResultCell(method, result) {
+    const cell = document.createElement('td');
+    cell.className = `method-cell ${methodConfig[method].cellClass}`;
+
+    if (!result) {
+      cell.classList.add('empty-result');
+      cell.textContent = '—';
+      cell.setAttribute('aria-label', 'No result at this rank');
+      return cell;
+    }
+
+    const config = methodConfig[method];
+    const record = document.createElement('div');
+    record.className = 'result-record';
+
+    record.appendChild(createTextElement('span', 'result-id', `ID: ${result.id ?? '—'}`));
+    record.appendChild(createTextElement('div', 'result-title', result.title ?? 'Untitled'));
+    record.appendChild(createTextElement('div', 'result-summary', result.summary ?? 'No summary available'));
+
+    const scoreLabel =
+      method === 'vector' ? `${config.label}: ${formatScore(result, config)} (lower is better)` : `${config.label}: ${formatScore(result, config)}`;
+    record.appendChild(createTextElement('span', 'result-score', scoreLabel));
+    cell.appendChild(record);
+    return cell;
+  }
+
+  function renderSearchResults(results) {
+    const methods = ['fuzzy', 'fts', 'vector', 'hybrid'];
+    const normalizedResults = {};
+
+    for (const method of methods) {
+      if (!Array.isArray(results[method])) {
+        throw new Error(`Invalid API response: "${method}" must be an array`);
+      }
+      normalizedResults[method] = results[method];
+    }
+
+    const maxRank = Math.max(0, ...methods.map(method => normalizedResults[method].length));
+    tbody.replaceChildren();
+
+    if (maxRank === 0) {
+      resultsTable.classList.add('hidden');
+      setStatus('No results found for this query.');
+      return;
+    }
+
+    for (let rank = 0; rank < maxRank; rank += 1) {
+      const row = document.createElement('tr');
+
+      const rankCell = document.createElement('td');
+      rankCell.className = 'rank-cell';
+      rankCell.textContent = String(rank + 1);
+      row.appendChild(rankCell);
+
+      for (const method of methods) {
+        row.appendChild(createResultCell(method, normalizedResults[method][rank]));
+      }
+      tbody.appendChild(row);
+    }
+
+    resultsTable.classList.remove('hidden');
+    resultsStatusBar.style.borderBottom = '1px solid var(--color-border)';
+    setStatus(`Showing results for "${searchInput.value.trim()}" — ${maxRank} rank${maxRank === 1 ? '' : 's'} across four search methods.`);
+  }
+
   async function handleSearch(event) {
+    event.preventDefault();
+    if (isSearching) return;
+
     const query = searchInput.value.trim();
-
-    if (query.length === 0) {
-      event.preventDefault();
+    if (!query) {
+      searchInput.focus();
       return;
     }
 
-    // Prevent consecutive requests (though the UI handles disabling)
-    if (isSearching) {
-      console.warn('Search already in progress.');
-      return;
-    }
-
-    // 1. Update UI for loading state
     updateLoadingState(true, query);
-    // resultsStatusBar.textContent = "Sending requests to backend...";
 
     try {
-      // 2. Execute the search logic
-      // NOTE: The /search endpoint uses query parameters, so no body is sent.
-      const response = await fetch('/search?query=' + encodeURIComponent(query));
-
+      const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
       if (!response.ok) {
-        const errorBody = await response.text();
-        // Try to parse JSON error message if available
-        try {
-          const errorJson = JSON.parse(errorBody);
-          throw new Error(errorJson.detail || `HTTP error! Status: ${response.status}`);
-        } catch (e) {
-          throw new Error(
-            `HTTP error! Status: ${response.status}. Body: ${errorBody.substring(0, 100)}`,
-          );
-        }
+        throw new Error(`Search request failed with status ${response.status}`);
       }
 
-      const data = await response.json();
+      const payload = await response.json();
+      if (!payload || !payload.results) {
+        throw new Error('Invalid API response');
+      }
 
-      // 3. Render the results
-      renderSearchResults(data, query);
+      renderSearchResults(payload.results);
+      errorMessage.classList.add('hidden');
+      errorMessage.textContent = '';
     } catch (error) {
       console.error('Search failed:', error);
-      displayError(error.message);
+      displayError('An error occurred while searching. Please try again.');
     } finally {
-      // 4. Reset UI state
       updateLoadingState(false, query);
-      currentQuery = query;
     }
   }
 
-  // --- Event Listeners ---
-
-  // Search on button click
   searchButton.addEventListener('click', handleSearch);
-
-  // Search on Enter keypress in input field
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSearch(e);
-    }
+  searchInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') handleSearch(event);
   });
-
-  // Reset button handler
-  resetButton.addEventListener('click', () => {
-    resetUI();
-  });
-
-  // Initialize on load
-  resetUI();
+  resetButton.addEventListener('click', resetUI);
 });
