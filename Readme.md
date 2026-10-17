@@ -8,16 +8,15 @@ A PostgreSQL search playground exploring fuzzy matching, full-text search, vecto
 
 Early development.
 
-- [x] Import product data from Hugging Face
-- [x] Store product records in PostgreSQL
-- [x] Generate local text embeddings
-- [x] Implement trigram similarity using `pg_trgm`
-- [x] Implement PostgreSQL full-text search (FTS)
-- [x] Implement semantic search using `pgvector`
-- [ ] Implement hybrid search
-- [x] Build a UI to compare the top 5 results from each search method
+- [X] Import product data from Hugging Face
+- [X] Store product records in PostgreSQL
+- [X] Generate local text embeddings
+- [X] Implement trigram similarity using `pg_trgm`
+- [X] Implement PostgreSQL full-text search (FTS)
+- [X] Implement semantic search using `pgvector`
+- [X] Implement hybrid search
+- [X] Build a UI to compare the top 5 results from each search method
 - [ ] Benchmark relevance and performance
-- [ ] Dockerize the application
 
 ## 🎯 Goals
 
@@ -43,16 +42,16 @@ pglord uses the [`Tvance100/items_full`](https://huggingface.co/datasets/Tvance1
 
 The dataset contains product metadata and descriptive text, including:
 
-| Field | Description |
-|---|---|
-| `title` | Product title |
-| `category` | Product category |
-| `price` | Product price |
-| `weight` | Product weight |
-| `summary` | Product summary and descriptive text |
-| `full` | Additional source field |
-| `prompt` | Additional source field |
-| `id` | Source dataset identifier |
+| Field        | Description                          |
+| ------------ | ------------------------------------ |
+| `title`    | Product title                        |
+| `category` | Product category                     |
+| `price`    | Product price                        |
+| `weight`   | Product weight                       |
+| `summary`  | Product summary and descriptive text |
+| `full`     | Additional source field              |
+| `prompt`   | Additional source field              |
+| `id`       | Source dataset identifier            |
 
 The product summaries are used as the initial input for generating vector embeddings.
 
@@ -154,13 +153,13 @@ Refer to each script for its current configuration requirements.
 
 pglord will compare several approaches using the same dataset and user queries.
 
-| Search method | Purpose |
-|---|---|
-| Exact matching | Establish a baseline |
-| Trigram similarity | Handle misspellings and similar strings |
-| Full-text search | Match and rank relevant keywords |
-| Vector search | Retrieve semantically similar descriptions |
-| Hybrid search | Combine lexical and semantic rankings |
+| Search method      | Purpose                                    |
+| ------------------ | ------------------------------------------ |
+| Exact matching     | Establish a baseline                       |
+| Trigram similarity | Handle misspellings and similar strings    |
+| Full-text search   | Match and rank relevant keywords           |
+| Vector search      | Retrieve semantically similar descriptions |
+| Hybrid search      | Combine lexical and semantic rankings      |
 
 The planned UI will accept a search query and display the top 5 results from each implemented search method.
 
@@ -184,7 +183,6 @@ A manually judged set of representative queries will be used to evaluate relevan
 3. Add hybrid search and ranking comparisons.
 4. Build the search comparison UI.
 5. Benchmark performance at different dataset sizes.
-6. Containerize the application with Docker Compose.
 
 ## 📜 License
 
