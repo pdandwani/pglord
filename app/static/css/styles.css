@@ -355,3 +355,22 @@ button:disabled {
     padding: 11px 12px;
   }
 }
+
+.method-cell {
+  height: 1px;
+  padding: 0;
+}
+
+.method-cell > .result-record {
+  justify-content: space-around;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.result-parent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+}
